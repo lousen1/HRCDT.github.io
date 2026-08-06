@@ -10,6 +10,7 @@
   <meta property="og:description" content="科学周期 · 到期提醒 · 轻松记录" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./family-sync.css" />
   <title>浇浇好 · 绿植提醒</title>
 </head>
 <body>
@@ -58,13 +59,25 @@
       </section>
 
       <section class="view" data-view="settings">
-        <div class="page-title"><p class="eyebrow">偏好设置</p><h1>提醒与数据</h1><p>记录只保存在你的手机浏览器中。</p></div>
+        <div class="page-title"><p class="eyebrow">偏好设置</p><h1>提醒与数据</h1><p>可只保存在本机，也可用家庭邀请码与家人同步。</p></div>
+        <div class="family-card">
+          <div class="family-heading"><div><strong>家庭同步</strong><p id="syncStatus">尚未开启，只保存在本机</p></div><span id="syncDot" class="sync-dot"></span></div>
+          <div id="familyDisconnected" class="family-actions">
+            <button id="createFamily" class="family-primary">创建家庭</button>
+            <button id="joinFamily">输入邀请码加入</button>
+          </div>
+          <div id="familyConnected" class="hidden">
+            <p class="family-tip">把下面的邀请码发给家人，两台手机就会共享植物和浇水记录。</p>
+            <button id="copyFamilyCode" class="family-code" type="button"><span id="familyCode">----</span><small>点此复制</small></button>
+            <div class="family-actions"><button id="syncNow" class="family-primary">立即同步</button><button id="leaveFamily">退出家庭</button></div>
+          </div>
+        </div>
         <div class="settings-card"><div><strong>浏览器到期提醒</strong><p id="permissionText">尚未开启</p></div><button id="enableNotifications">开启</button></div>
         <div class="settings-card"><div><strong>默认提醒时间</strong><p>新添加的植物默认使用这个时间</p></div><input id="defaultTime" type="time" value="09:00" /></div>
         <div class="settings-card"><div><strong>添加到手机日历</strong><p>即使应用没有打开，系统日历也能提醒</p></div><button id="exportCalendar">导出</button></div>
         <div class="settings-card"><div><strong>安装到手机桌面</strong><p id="installText">可像普通 App 一样打开</p></div><button id="installApp">安装</button></div>
         <button class="danger-button" id="resetData">清空本机数据</button>
-        <p class="privacy-note">植物档案和浇水记录默认只保存在这台手机的浏览器中，不上传云端。</p>
+        <p class="privacy-note">未开启家庭同步时，记录只保存在本机。开启后，植物档案和浇水记录会加密传输到家庭共享空间；邀请码相当于钥匙，请只发给家人。</p>
       </section>
     </main>
 
@@ -84,3 +97,4 @@
   <script src="./app.js" defer></script>
 </body>
 </html>
+
