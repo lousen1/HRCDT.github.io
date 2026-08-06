@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#173f32" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <meta name="description" content="管理绿植浇水周期、养护注意事项与手机提醒。" />
+  <meta property="og:title" content="浇浇好 · 绿植提醒" />
+  <meta property="og:description" content="科学周期 · 到期提醒 · 轻松记录" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="stylesheet" href="./styles.css" />
+  <title>浇浇好 · 绿植提醒</title>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-mark" aria-hidden="true"><span></span></div>
+      <div><strong>浇浇好</strong><small>你的绿植养护助手</small></div>
+      <button class="icon-button" id="notificationButton" aria-label="开启提醒">铃</button>
+    </header>
+
+    <main id="mainContent">
+      <section class="view active" data-view="today">
+        <div class="hero">
+          <div><p class="eyebrow" id="todayLabel"></p><h1>今天，先看看<br />谁口渴了</h1></div>
+          <div class="hero-orbit"><span class="drop">水</span><i></i><b></b></div>
+        </div>
+        <div id="importBanner" class="import-banner hidden">
+          <div><strong>把你家里的 13 盆植物带进来</strong><p>已按之前的照片和浇水记录准备好。</p></div>
+          <button id="importPlants">一键导入</button>
+        </div>
+        <div class="section-head"><div><h2>今日待判断</h2><p>到期不等于必须浇水</p></div><span id="dueCount" class="count-pill">0</span></div>
+        <div id="dueList" class="card-list"></div>
+        <div class="section-head compact"><div><h2>接下来</h2><p>未来 7 天的安排</p></div></div>
+        <div id="upcomingList" class="timeline"></div>
+      </section>
+
+      <section class="view" data-view="plants">
+        <div class="page-title"><p class="eyebrow">我的小森林</p><h1>全部绿植</h1><p id="plantSummary"></p></div>
+        <div class="filter-row"><button class="chip active" data-filter="all">全部</button><button class="chip" data-filter="due">待浇</button><button class="chip" data-filter="soon">近期</button></div>
+        <div id="plantGrid" class="plant-grid"></div>
+      </section>
+
+      <section class="view add-view" data-view="add">
+        <div class="page-title"><p class="eyebrow">认识新朋友</p><h1>添加一盆绿植</h1><p>从常见植物中选择，系统会填好建议周期和养护要点；也可以完全自定义。</p></div>
+        <button class="primary-button" id="manualAdd"><span>选择植物</span><small>含你家现有的 13 种绿植</small></button>
+        <form id="plantForm" class="plant-form hidden">
+          <div class="result-heading"><span class="confidence" id="confidenceBadge">手动添加</span><h2 id="resultTitle">确认植物信息</h2></div>
+          <label>植物名称<input name="name" required /></label>
+          <label>学名或别名<input name="scientificName" /></label>
+          <div class="form-split"><label>判断周期（天）<input name="wateringDays" type="number" min="1" max="60" required /></label><label>提醒时间<input name="reminderTime" type="time" value="09:00" required /></label></div>
+          <label>什么时候才浇水<textarea name="wateringTrigger" rows="2" required></textarea></label>
+          <label>光照建议<input name="light" /></label>
+          <label>注意事项<textarea name="notes" rows="3"></textarea></label>
+          <button type="submit" class="primary-button"><span>保存并设置提醒</span></button>
+        </form>
+      </section>
+
+      <section class="view" data-view="settings">
+        <div class="page-title"><p class="eyebrow">偏好设置</p><h1>提醒与数据</h1><p>记录只保存在你的手机浏览器中。</p></div>
+        <div class="settings-card"><div><strong>浏览器到期提醒</strong><p id="permissionText">尚未开启</p></div><button id="enableNotifications">开启</button></div>
+        <div class="settings-card"><div><strong>默认提醒时间</strong><p>新添加的植物默认使用这个时间</p></div><input id="defaultTime" type="time" value="09:00" /></div>
+        <div class="settings-card"><div><strong>添加到手机日历</strong><p>即使应用没有打开，系统日历也能提醒</p></div><button id="exportCalendar">导出</button></div>
+        <div class="settings-card"><div><strong>安装到手机桌面</strong><p id="installText">可像普通 App 一样打开</p></div><button id="installApp">安装</button></div>
+        <button class="danger-button" id="resetData">清空本机数据</button>
+        <p class="privacy-note">植物档案和浇水记录默认只保存在这台手机的浏览器中，不上传云端。</p>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="主导航">
+      <button class="active" data-target="today"><span>今</span><small>今天</small></button>
+      <button data-target="plants"><span>叶</span><small>绿植</small></button>
+      <button class="add-nav" data-target="add"><span>+</span><small>添加</small></button>
+      <button data-target="settings"><span>设</span><small>设置</small></button>
+    </nav>
+  </div>
+
+  <dialog id="manualDialog">
+    <form method="dialog" class="dialog-card"><div class="dialog-head"><div><p class="eyebrow">快速添加</p><h2>选择植物</h2></div><button value="cancel" aria-label="关闭">×</button></div><div id="catalogList" class="catalog-list"></div></form>
+  </dialog>
+  <dialog id="detailDialog"><div id="detailContent" class="dialog-card"></div></dialog>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="./app.js" defer></script>
+</body>
+</html>
