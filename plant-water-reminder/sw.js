@@ -1,4 +1,4 @@
-const CACHE = "jiaojiaohao-v4";
+const CACHE = "jiaojiaohao-v5";
 const ASSETS = ["./", "./styles.css", "./family-sync.css", "./app.js", "./manifest.webmanifest"];
 self.addEventListener("install", (event) => event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS))));
 self.addEventListener("activate", (event) => event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))))));
