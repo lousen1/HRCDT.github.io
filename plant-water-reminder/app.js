@@ -3,17 +3,17 @@ const SETTINGS_KEY = "jiaojiaohao:settings";
 const SYNC_API = "https://vqeaflfiohcuaczudhgf.supabase.co/functions/v1/family-sync";
 
 const catalog = [
-  { name:"富贵竹", scientificName:"Dracaena sanderiana", cycle:7, trigger:"水培时水位刚好覆盖根系；土培时表土 2–3 厘米干燥", light:"明亮散射光", notes:["水培每 2–4 周换水","避免水淹茎秆"] },
+  { name:"富贵竹", scientificName:"Dracaena sanderiana", cycle:3, trigger:"每 3 天检查水位，水位不足时补至刚好覆盖根系", light:"明亮散射光", notes:["每 3 天检查并按需补水","每 2–4 周换水并清洗容器"] },
   { name:"袖珍椰子", scientificName:"Chamaedorea elegans", cycle:7, trigger:"表土 2–3 厘米干燥", light:"中等至明亮散射光", notes:["浇透后倒掉托盘积水","避免长期湿涝"] },
   { name:"景天科多肉", scientificName:"Sedum spp.", cycle:14, trigger:"盆土完全干且花盆明显变轻", light:"明亮光照，可接受温和日照", notes:["一次浇透并排尽水","宁干勿频浇"] },
-  { name:"巴西木", scientificName:"Dracaena fragrans", cycle:10, trigger:"表土 3–5 厘米干燥", light:"明亮散射光", notes:["不要让叶心长期存水","低温时延长间隔"] },
+  { name:"巴西木", scientificName:"Dracaena fragrans", cycle:10, trigger:"检查碗碟水位，补水至没过根部约 3 厘米", light:"明亮散射光", notes:["放在碗碟中水养，水深以没过根部约 3 厘米为准","定期换水并清洗碗碟"] },
   { name:"罗汉松", scientificName:"Podocarpus macrophyllus", cycle:7, trigger:"表土约 2 厘米干燥", light:"明亮通风，宜有柔和日照", notes:["保持微润但不积水","通风差时延长间隔"] },
   { name:"文竹", scientificName:"Asparagus setaceus", cycle:5, trigger:"表土 1–2 厘米干燥", light:"明亮散射光", notes:["不要完全干透","空气干燥时适度加湿"] },
   { name:"小叶黄杨", scientificName:"Buxus sinica", cycle:7, trigger:"表土约 2 厘米干燥", light:"明亮通风", notes:["浇透后彻底沥水"] },
   { name:"银龙海芋苔球", scientificName:"Alocasia baginda 'Silver Dragon'", cycle:3, trigger:"苔球表面发干且整体变轻", light:"明亮散射光", notes:["连球浸水 5–10 分钟后沥干","不要长期泡在托盘里"] },
   { name:"姬龟背竹", scientificName:"Monstera adansonii", cycle:14, trigger:"水培时水位低于根系，或水变浑浊", light:"明亮散射光", notes:["水培约 14 天换水","换水时冲洗容器和根系"] },
-  { name:"真柏盆景", scientificName:"Juniperus chinensis", cycle:3, trigger:"表层刚接近干、内部仍微润", light:"室外明亮通风并有日照", notes:["不适合长期放在封闭室内","细流浇透"] },
-  { name:"观音竹", scientificName:"Bambusa multiplex", cycle:5, trigger:"表土约 2 厘米干燥", light:"明亮散射光至柔和日照", notes:["高盆要确认底部能排水"] },
+  { name:"真柏盆景", scientificName:"Juniperus chinensis", cycle:2, trigger:"每 2 天检查，表层刚接近干、内部仍微润时浇透", light:"室外明亮通风并有日照", notes:["不适合长期放在封闭室内","细流浇透"] },
+  { name:"观音竹", scientificName:"Bambusa multiplex", cycle:3, seasonalCycle:{springSummer:3,autumnWinter:5}, trigger:"春夏每 3 天、秋冬每 5 天检查；表土约 2 厘米干燥时再浇", light:"明亮散射光至柔和日照", notes:["春夏按 3 天周期，秋冬按 5 天周期","高盆要确认底部能排水"] },
   { name:"天堂鸟", scientificName:"Strelitzia reginae", cycle:10, trigger:"表土 3–5 厘米干燥", light:"明亮光照，可接受日照", notes:["浇透并倒掉托盘水"] },
   { name:"发财树", scientificName:"Pachira aquatica", cycle:14, trigger:"上半盆土已干且花盆明显变轻", light:"明亮散射光", notes:["粗干最怕频繁少量浇水","浇透后彻底沥水"] }
 ];
@@ -48,6 +48,32 @@ function loadJSON(key, fallback){ try { return JSON.parse(localStorage.getItem(k
 function persistLocal(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(plants)); localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
 function save({sync=true}={}){ persistLocal(); if(sync && settings.familyCode) scheduleFamilyPush(); }
 function uid(){ return crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`; }
+
+function cycleFor(plant, dateValue=new Date()){
+  if(!plant.seasonalCycle)return Number(plant.cycle);
+  const date=typeof dateValue==="string"?new Date(`${dateValue}T12:00:00`):dateValue;
+  const month=date.getMonth()+1;
+  return month>=3&&month<=8 ? Number(plant.seasonalCycle.springSummer) : Number(plant.seasonalCycle.autumnWinter);
+}
+
+function cycleLabel(plant){
+  return plant.seasonalCycle ? `春夏 ${plant.seasonalCycle.springSummer} 天 · 秋冬 ${plant.seasonalCycle.autumnWinter} 天` : `每 ${plant.cycle} 天`;
+}
+
+function applyCarePlanCorrections(){
+  let changed=false;
+  const update=(plant,values)=>{ Object.entries(values).forEach(([key,value])=>{ if(JSON.stringify(plant[key])!==JSON.stringify(value)){plant[key]=value;changed=true;} }); };
+  plants.forEach(plant=>{
+    const oldCycle=Number(plant.cycle);
+    if(plant.name==="富贵竹") update(plant,{cycle:3,trigger:"每 3 天检查水位，水位不足时补至刚好覆盖根系",notes:["每 3 天检查并按需补水","每 2–4 周换水并清洗容器"]});
+    if(plant.name==="巴西木") update(plant,{trigger:"检查碗碟水位，补水至没过根部约 3 厘米",notes:["放在碗碟中水养，水深以没过根部约 3 厘米为准","定期换水并清洗碗碟"]});
+    if(plant.name==="银龙海芋苔球") update(plant,{cycle:3});
+    if(plant.name==="真柏盆景") update(plant,{cycle:2,trigger:"每 2 天检查，表层刚接近干、内部仍微润时浇透"});
+    if(plant.name==="观音竹") update(plant,{cycle:3,seasonalCycle:{springSummer:3,autumnWinter:5},trigger:"春夏每 3 天、秋冬每 5 天检查；表土约 2 厘米干燥时再浇",notes:["春夏按 3 天周期，秋冬按 5 天周期","高盆要确认底部能排水"]});
+    if(plant.lastWatered && oldCycle!==Number(plant.cycle)) plant.nextDue=addDays(plant.lastWatered,cycleFor(plant,plant.lastWatered));
+  });
+  return changed;
+}
 
 function familySnapshot(){
   return { plants, settings:{ defaultTime:settings.defaultTime, imported:Boolean(settings.imported) } };
@@ -88,8 +114,10 @@ function applyFamilySnapshot(snapshot, version){
     settings.imported=Boolean(snapshot.settings.imported);
   }
   settings.familyVersion=Number(version)||0;
+  const corrected=applyCarePlanCorrections();
   pendingLocalChange=false;
   persistLocal();
+  if(corrected) scheduleFamilyPush();
   if($("#defaultTime")) $("#defaultTime").value=settings.defaultTime;
   renderToday();
   if($("[data-view='plants']")?.classList.contains("active")) renderPlants();
@@ -196,7 +224,7 @@ function renderToday(){
 
 function dueCard(p){
   const overdue = Math.abs(Math.min(diffDays(p.nextDue),0));
-  return `<article class="plant-card" data-id="${p.id}"><div class="plant-avatar"></div><div><h3>${escapeHTML(p.name)}</h3><div class="meta"><span class="tag warn">${overdue ? `已过 ${overdue} 天` : "今天到期"}</span><span class="tag">每 ${p.cycle} 天判断</span></div><p class="trigger">${escapeHTML(p.trigger)}</p></div><div class="card-actions"><button class="skip-button" data-action="skip">明天再看</button><button class="water-button" data-action="water">今天已浇水</button></div></article>`;
+  return `<article class="plant-card" data-id="${p.id}"><div class="plant-avatar"></div><div><h3>${escapeHTML(p.name)}</h3><div class="meta"><span class="tag warn">${overdue ? `已过 ${overdue} 天` : "今天到期"}</span><span class="tag">${cycleLabel(p)}判断</span></div><p class="trigger">${escapeHTML(p.trigger)}</p></div><div class="card-actions"><button class="skip-button" data-action="skip">明天再看</button><button class="water-button" data-action="water">今天已浇水</button></div></article>`;
 }
 
 function groupUpcoming(list){
@@ -223,14 +251,14 @@ function bindPlantActions(){
 
 function markWatered(id){
   const p=plants.find(x=>x.id===id); if(!p)return;
-  p.lastWatered=todayISO(); p.nextDue=addDays(todayISO(),p.cycle); save();
+  p.lastWatered=todayISO(); p.nextDue=addDays(todayISO(),cycleFor(p)); save();
   toast(`${p.name} 已记录，下次 ${formatDate(p.nextDue)}`); renderToday();
 }
 function postpone(id){ const p=plants.find(x=>x.id===id); if(!p)return; p.nextDue=addDays(todayISO(),1); save(); toast(`${p.name} 调整到明天`); renderToday(); }
 
 function openDetail(id){
   const p=plants.find(x=>x.id===id); if(!p)return;
-  $("#detailContent").innerHTML=`<div class="detail-card"><div class="dialog-head"><div><p class="eyebrow">植物档案</p><h2>${escapeHTML(p.name)}</h2><p class="detail-meta">${escapeHTML(p.scientificName||"")} · 每 ${p.cycle} 天判断一次</p></div><button data-close>×</button></div><div class="detail-section"><strong>下次判断</strong><p>${formatDate(p.nextDue,true)} ${p.reminderTime||settings.defaultTime}</p></div><div class="detail-section"><strong>真正需要浇水的信号</strong><p>${escapeHTML(p.trigger)}</p></div><div class="detail-section"><strong>光照</strong><p>${escapeHTML(p.light||"明亮散射光")}</p></div><div class="detail-section"><strong>注意事项</strong><ul>${(p.notes||[]).map(n=>`<li>${escapeHTML(n)}</li>`).join("")}</ul></div><div class="dialog-actions"><button class="skip-button" data-delete>删除</button><button class="water-button" data-detail-water>今天已浇水</button></div></div>`;
+  $("#detailContent").innerHTML=`<div class="detail-card"><div class="dialog-head"><div><p class="eyebrow">植物档案</p><h2>${escapeHTML(p.name)}</h2><p class="detail-meta">${escapeHTML(p.scientificName||"")} · ${cycleLabel(p)}判断一次</p></div><button data-close>×</button></div><div class="detail-section"><strong>下次判断</strong><p>${formatDate(p.nextDue,true)} ${p.reminderTime||settings.defaultTime}</p></div><div class="detail-section"><strong>真正需要浇水的信号</strong><p>${escapeHTML(p.trigger)}</p></div><div class="detail-section"><strong>光照</strong><p>${escapeHTML(p.light||"明亮散射光")}</p></div><div class="detail-section"><strong>注意事项</strong><ul>${(p.notes||[]).map(n=>`<li>${escapeHTML(n)}</li>`).join("")}</ul></div><div class="dialog-actions"><button class="skip-button" data-delete>删除</button><button class="water-button" data-detail-water>今天已浇水</button></div></div>`;
   const dialog=$("#detailDialog"); dialog.showModal();
   $("[data-close]",dialog).onclick=()=>dialog.close();
   $("[data-detail-water]",dialog).onclick=()=>{dialog.close();markWatered(id);renderPlants();};
@@ -241,7 +269,7 @@ function importSamples(){
   const today=todayISO();
   plants=catalog.map(item=>{
     const last=sampleHistory[item.name]||null;
-    return { id:uid(), name:item.name, scientificName:item.scientificName, cycle:item.cycle, trigger:item.trigger, light:item.light, notes:item.notes, lastWatered:last, nextDue:last?addDays(last,item.cycle):(sampleFirstDue[item.name]||today), reminderTime:settings.defaultTime, source:"imported" };
+    return { id:uid(), name:item.name, scientificName:item.scientificName, cycle:item.cycle, seasonalCycle:item.seasonalCycle, trigger:item.trigger, light:item.light, notes:item.notes, lastWatered:last, nextDue:last?addDays(last,cycleFor(item,last)):(sampleFirstDue[item.name]||today), reminderTime:settings.defaultTime, source:"imported" };
   });
   settings.imported=true; save(); renderToday(); toast("13 盆植物已导入");
 }
@@ -280,7 +308,7 @@ async function maybeNotify(due){
 function exportCalendar(){
   if(!plants.length){toast("先添加植物再导出日历");return;}
   const esc=s=>String(s).replace(/([,;\\])/g,"\\$1").replace(/\n/g,"\\n");
-  const events=plants.map(p=>{ const dt=p.nextDue.replaceAll("-","")+String(p.reminderTime||settings.defaultTime).replace(":","")+"00"; return ["BEGIN:VEVENT",`UID:${p.id}@jiaojiaohao`,`DTSTART;TZID=Asia/Shanghai:${dt}`,`RRULE:FREQ=DAILY;INTERVAL=${p.cycle}`,`SUMMARY:${esc(p.name)}浇水判断`, `DESCRIPTION:${esc(p.trigger)}`,"BEGIN:VALARM","TRIGGER:PT0M","ACTION:DISPLAY",`DESCRIPTION:${esc(p.name)}今天是否需要浇水？`,"END:VALARM","END:VEVENT"].join("\r\n"); }).join("\r\n");
+  const events=plants.map(p=>{ const dt=p.nextDue.replaceAll("-","")+String(p.reminderTime||settings.defaultTime).replace(":","")+"00"; return ["BEGIN:VEVENT",`UID:${p.id}@jiaojiaohao`,`DTSTART;TZID=Asia/Shanghai:${dt}`,`RRULE:FREQ=DAILY;INTERVAL=${cycleFor(p)}`,`SUMMARY:${esc(p.name)}浇水判断`, `DESCRIPTION:${esc(p.trigger)}`,"BEGIN:VALARM","TRIGGER:PT0M","ACTION:DISPLAY",`DESCRIPTION:${esc(p.name)}今天是否需要浇水？`,"END:VALARM","END:VEVENT"].join("\r\n"); }).join("\r\n");
   const ics=`BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//JiaoJiaoHao//Plant Reminder//ZH\r\nCALSCALE:GREGORIAN\r\n${events}\r\nEND:VCALENDAR`;
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([ics],{type:"text/calendar;charset=utf-8"}));a.download="浇浇好-绿植提醒.ics";a.click();URL.revokeObjectURL(a.href);toast("日历文件已生成");
 }
@@ -289,6 +317,8 @@ function toast(message){ const el=$("#toast");el.textContent=message;el.classLis
 function escapeHTML(value){ const div=document.createElement("div");div.textContent=value??"";return div.innerHTML; }
 
 function init(){
+  const carePlanChanged=applyCarePlanCorrections();
+  if(carePlanChanged) save();
   $$(".bottom-nav button").forEach(b=>b.onclick=()=>showView(b.dataset.target));
   $$(".chip").forEach(b=>b.onclick=()=>{$$(".chip").forEach(x=>x.classList.remove("active"));b.classList.add("active");currentFilter=b.dataset.filter;renderPlants();});
   $("#importPlants").onclick=importSamples; $("#manualAdd").onclick=openManual; $("#plantForm").onsubmit=submitPlant;
