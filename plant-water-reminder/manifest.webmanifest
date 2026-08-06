@@ -1,0 +1,13 @@
+{
+  "name": "浇浇好 · 绿植提醒",
+  "short_name": "浇浇好",
+  "description": "管理绿植浇水周期、养护注意事项与手机提醒。",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f1e8",
+  "theme_color": "#173f32",
+  "lang": "zh-CN",
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
