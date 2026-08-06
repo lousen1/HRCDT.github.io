@@ -1,5 +1,6 @@
 const STORAGE_KEY = "jiaojiaohao:v1";
 const SETTINGS_KEY = "jiaojiaohao:settings";
+const SYNC_API = "https://vqeaflfiohcuaczudhgf.supabase.co/functions/v1/family-sync";
 
 const catalog = [
   { name:"富贵竹", scientificName:"Dracaena sanderiana", cycle:7, trigger:"水培时水位刚好覆盖根系；土培时表土 2–3 厘米干燥", light:"明亮散射光", notes:["水培每 2–4 周换水","避免水淹茎秆"] },
@@ -21,8 +22,12 @@ const sampleHistory = { "巴西木":"2026-08-01", "银龙海芋苔球":"2026-08-
 const sampleFirstDue = { "发财树":"2026-08-04" };
 let plants = loadJSON(STORAGE_KEY, []);
 let settings = loadJSON(SETTINGS_KEY, { defaultTime:"09:00", imported:false, notified:{} });
+settings = { defaultTime:"09:00", imported:false, notified:{}, familyCode:"", familyVersion:0, ...settings };
 let installPrompt = null;
 let currentFilter = "all";
+let syncBusy = false;
+let syncPushTimer = null;
+let pendingLocalChange = false;
 
 const $ = (selector, root=document) => root.querySelector(selector);
 const $$ = (selector, root=document) => [...root.querySelectorAll(selector)];
@@ -40,8 +45,132 @@ const formatDate = (iso, withWeek=false) => {
   return `${d.getMonth()+1}月${d.getDate()}日${withWeek ? ` 周${"日一二三四五六"[d.getDay()]}` : ""}`;
 };
 function loadJSON(key, fallback){ try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } }
-function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(plants)); localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
+function persistLocal(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(plants)); localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
+function save({sync=true}={}){ persistLocal(); if(sync && settings.familyCode) scheduleFamilyPush(); }
 function uid(){ return crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`; }
+
+function familySnapshot(){
+  return { plants, settings:{ defaultTime:settings.defaultTime, imported:Boolean(settings.imported) } };
+}
+
+async function familyRequest(payload){
+  const response = await fetch(SYNC_API, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
+  let data={};
+  try { data=await response.json(); } catch {}
+  if(!response.ok){ const error=new Error(data.error||"同步失败"); error.status=response.status; error.data=data; throw error; }
+  return data;
+}
+
+function setSyncStatus(message, state=""){
+  const text=$("#syncStatus"), dot=$("#syncDot");
+  if(text) text.textContent=message;
+  if(dot) dot.className=`sync-dot${state?` ${state}`:""}`;
+}
+
+function renderFamilySettings(){
+  const connected=Boolean(settings.familyCode);
+  $("#familyDisconnected")?.classList.toggle("hidden",connected);
+  $("#familyConnected")?.classList.toggle("hidden",!connected);
+  if($("#familyCode")) $("#familyCode").textContent=settings.familyCode||"----";
+  if(!connected) setSyncStatus("尚未开启，只保存在本机");
+  else if(!syncBusy && $("#syncStatus")?.textContent==="尚未开启，只保存在本机") setSyncStatus("已连接 · 自动同步中","online");
+}
+
+function setFamilyButtons(disabled){
+  ["#createFamily","#joinFamily","#syncNow","#leaveFamily"].forEach(id=>{ const el=$(id); if(el)el.disabled=disabled; });
+}
+
+function applyFamilySnapshot(snapshot, version){
+  if(!snapshot || !Array.isArray(snapshot.plants)) throw new Error("云端数据格式不正确");
+  plants=snapshot.plants;
+  if(snapshot.settings && typeof snapshot.settings==="object"){
+    settings.defaultTime=snapshot.settings.defaultTime||settings.defaultTime;
+    settings.imported=Boolean(snapshot.settings.imported);
+  }
+  settings.familyVersion=Number(version)||0;
+  pendingLocalChange=false;
+  persistLocal();
+  if($("#defaultTime")) $("#defaultTime").value=settings.defaultTime;
+  renderToday();
+  if($("[data-view='plants']")?.classList.contains("active")) renderPlants();
+}
+
+function scheduleFamilyPush(){
+  pendingLocalChange=true;
+  clearTimeout(syncPushTimer);
+  syncPushTimer=setTimeout(pushFamily,700);
+}
+
+async function pushFamily(){
+  if(!settings.familyCode || syncBusy || !pendingLocalChange)return;
+  syncBusy=true; setFamilyButtons(true); setSyncStatus("正在上传本机更新…","busy");
+  try{
+    const data=await familyRequest({action:"put",code:settings.familyCode,expectedVersion:Number(settings.familyVersion)||0,snapshot:familySnapshot()});
+    settings.familyVersion=Number(data.version)||settings.familyVersion;
+    pendingLocalChange=false; persistLocal();
+    setSyncStatus("已同步到另一台手机","online");
+  }catch(error){
+    if(error.status===409 && error.data?.snapshot){
+      applyFamilySnapshot(error.data.snapshot,error.data.version);
+      toast("另一台手机刚有更新，已载入最新记录");
+      setSyncStatus("已载入家人的最新记录","online");
+    }else{
+      setSyncStatus("网络暂时不可用，本机记录会稍后重试","error");
+      clearTimeout(syncPushTimer); syncPushTimer=setTimeout(pushFamily,15000);
+    }
+  }finally{ syncBusy=false; setFamilyButtons(false); renderFamilySettings(); }
+}
+
+async function pullFamily({silent=true}={}){
+  if(!settings.familyCode || syncBusy)return;
+  if(pendingLocalChange){ await pushFamily(); return; }
+  syncBusy=true; setFamilyButtons(true); setSyncStatus("正在检查家人的更新…","busy");
+  try{
+    const data=await familyRequest({action:"get",code:settings.familyCode});
+    if(Number(data.version)>Number(settings.familyVersion)){
+      applyFamilySnapshot(data.snapshot,data.version);
+      if(!silent) toast("已收到家人的最新记录");
+    }
+    setSyncStatus("已是最新记录","online");
+  }catch(error){ setSyncStatus(error.message||"同步失败，请稍后重试","error"); }
+  finally{ syncBusy=false; setFamilyButtons(false); renderFamilySettings(); }
+}
+
+async function createFamily(){
+  if(syncBusy)return;
+  syncBusy=true; setFamilyButtons(true); setSyncStatus("正在创建家庭…","busy");
+  try{
+    const data=await familyRequest({action:"create",displayName:"我的绿植家庭",snapshot:familySnapshot()});
+    settings.familyCode=data.code; settings.familyVersion=Number(data.version)||1; pendingLocalChange=false; persistLocal();
+    setSyncStatus("家庭已创建并完成同步","online"); renderFamilySettings(); toast("家庭已创建，把邀请码发给家人即可");
+  }catch(error){ setSyncStatus(error.message||"创建失败，请稍后重试","error"); toast(error.message||"创建失败"); }
+  finally{ syncBusy=false; setFamilyButtons(false); renderFamilySettings(); }
+}
+
+async function joinFamily(){
+  const input=prompt("请输入家人发给你的 16 位家庭邀请码");
+  if(!input)return;
+  const code=String(input).toUpperCase().replace(/[^A-Z0-9]/g,"");
+  if(code.length!==16){toast("邀请码应为 16 位");return;}
+  if(plants.length && !confirm("加入后将使用家庭中的植物和浇水记录，替换这台手机当前的记录。是否继续？"))return;
+  syncBusy=true; setFamilyButtons(true); setSyncStatus("正在加入家庭…","busy");
+  try{
+    const data=await familyRequest({action:"get",code});
+    settings.familyCode=data.code; applyFamilySnapshot(data.snapshot,data.version); setSyncStatus("已加入家庭并完成同步","online"); renderFamilySettings(); toast("已加入家庭，记录已同步");
+  }catch(error){ setSyncStatus(error.message||"加入失败，请检查邀请码","error"); toast(error.message||"加入失败"); }
+  finally{ syncBusy=false; setFamilyButtons(false); renderFamilySettings(); }
+}
+
+async function copyFamilyCode(){
+  if(!settings.familyCode)return;
+  try{ await navigator.clipboard.writeText(settings.familyCode); toast("邀请码已复制"); }
+  catch{ prompt("长按复制这个家庭邀请码",settings.familyCode); }
+}
+
+function leaveFamily(){
+  if(!confirm("退出后，这台手机将停止同步；云端家庭和家人的记录不会删除。是否继续？"))return;
+  settings.familyCode=""; settings.familyVersion=0; pendingLocalChange=false; clearTimeout(syncPushTimer); persistLocal(); renderFamilySettings(); toast("这台手机已退出家庭");
+}
 
 function showView(name){
   $$(".view").forEach(v=>v.classList.toggle("active",v.dataset.view===name));
@@ -49,6 +178,7 @@ function showView(name){
   window.scrollTo({top:0,behavior:"smooth"});
   if(name==="plants") renderPlants();
   if(name==="today") renderToday();
+  if(name==="settings") { renderFamilySettings(); pullFamily(); }
 }
 
 function renderToday(){
@@ -144,7 +274,7 @@ function updatePermission(){ const p=("Notification" in window)?Notification.per
 async function maybeNotify(due){
   if(!due.length||!("Notification" in window)||Notification.permission!=="granted")return; const key=todayISO(); if(settings.notified[key])return;
   const names=due.slice(0,3).map(p=>p.name).join("、"); const reg=await navigator.serviceWorker?.ready; const options={body:`${names}${due.length>3?` 等 ${due.length} 盆`:""}今天可以判断是否需要浇水。`,tag:`plants-${key}`};
-  reg?.showNotification?await reg.showNotification("浇浇好 · 今日提醒",options):new Notification("浇浇好 · 今日提醒",options); settings.notified[key]=true; save();
+  reg?.showNotification?await reg.showNotification("浇浇好 · 今日提醒",options):new Notification("浇浇好 · 今日提醒",options); settings.notified[key]=true; save({sync:false});
 }
 
 function exportCalendar(){
@@ -163,12 +293,16 @@ function init(){
   $$(".chip").forEach(b=>b.onclick=()=>{$$(".chip").forEach(x=>x.classList.remove("active"));b.classList.add("active");currentFilter=b.dataset.filter;renderPlants();});
   $("#importPlants").onclick=importSamples; $("#manualAdd").onclick=openManual; $("#plantForm").onsubmit=submitPlant;
   $("#notificationButton").onclick=enableNotifications; $("#enableNotifications").onclick=enableNotifications; $("#exportCalendar").onclick=exportCalendar;
+  $("#createFamily").onclick=createFamily; $("#joinFamily").onclick=joinFamily; $("#copyFamilyCode").onclick=copyFamilyCode; $("#syncNow").onclick=()=>pullFamily({silent:false}); $("#leaveFamily").onclick=leaveFamily;
   $("#defaultTime").value=settings.defaultTime; $("#defaultTime").onchange=e=>{settings.defaultTime=e.target.value;save();toast("默认时间已更新");};
-  $("#resetData").onclick=()=>{if(confirm("清空所有植物档案和设置？")){plants=[];settings={defaultTime:"09:00",imported:false,notified:{}};save();renderToday();toast("本机数据已清空");}};
+  $("#resetData").onclick=()=>{if(confirm(settings.familyCode?"清空后会同步到家人的手机，确定清空全部植物档案吗？":"清空所有植物档案和设置？")){plants=[];settings={...settings,defaultTime:"09:00",imported:false,notified:{}};save();renderToday();toast("植物档案已清空");}};
   $("#installApp").onclick=async()=>{if(installPrompt){installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;}else toast("请在浏览器菜单中选择“添加到主屏幕”");};
   window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installPrompt=e;$("#installText").textContent="已准备好安装到桌面";});
-  document.addEventListener("visibilitychange",()=>{if(!document.hidden)renderToday();});
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden){renderToday();pullFamily();}});
+  window.addEventListener("online",()=>pullFamily({silent:false}));
+  setInterval(()=>{if(!document.hidden)pullFamily();},15000);
   if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
-  updatePermission();renderToday();
+  updatePermission();renderFamilySettings();renderToday();pullFamily();
 }
 document.addEventListener("DOMContentLoaded",init);
+
