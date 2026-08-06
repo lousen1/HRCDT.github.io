@@ -5,21 +5,21 @@ const SYNC_API = "https://vqeaflfiohcuaczudhgf.supabase.co/functions/v1/family-s
 const catalog = [
   { name:"富贵竹", scientificName:"Dracaena sanderiana", cycle:3, trigger:"每 3 天检查水位，水位不足时补至刚好覆盖根系", light:"明亮散射光", notes:["每 3 天检查并按需补水","每 2–4 周换水并清洗容器"] },
   { name:"袖珍椰子", scientificName:"Chamaedorea elegans", cycle:7, trigger:"表土 2–3 厘米干燥", light:"中等至明亮散射光", notes:["浇透后倒掉托盘积水","避免长期湿涝"] },
-  { name:"景天科多肉", scientificName:"Sedum spp.", cycle:14, trigger:"盆土完全干且花盆明显变轻", light:"明亮光照，可接受温和日照", notes:["一次浇透并排尽水","宁干勿频浇"] },
+  { name:"新玉缀", scientificName:"Sedum spp.", cycle:14, trigger:"盆土完全干且花盆明显变轻", light:"明亮光照，可接受温和日照", notes:["一次浇透并排尽水","宁干勿频浇"] },
   { name:"巴西木", scientificName:"Dracaena fragrans", cycle:10, trigger:"检查碗碟水位，补水至没过根部约 3 厘米", light:"明亮散射光", notes:["放在碗碟中水养，水深以没过根部约 3 厘米为准","定期换水并清洗碗碟"] },
   { name:"罗汉松", scientificName:"Podocarpus macrophyllus", cycle:7, trigger:"表土约 2 厘米干燥", light:"明亮通风，宜有柔和日照", notes:["保持微润但不积水","通风差时延长间隔"] },
   { name:"文竹", scientificName:"Asparagus setaceus", cycle:5, trigger:"表土 1–2 厘米干燥", light:"明亮散射光", notes:["不要完全干透","空气干燥时适度加湿"] },
   { name:"小叶黄杨", scientificName:"Buxus sinica", cycle:7, trigger:"表土约 2 厘米干燥", light:"明亮通风", notes:["浇透后彻底沥水"] },
   { name:"银龙海芋苔球", scientificName:"Alocasia baginda 'Silver Dragon'", cycle:3, trigger:"苔球表面发干且整体变轻", light:"明亮散射光", notes:["连球浸水 5–10 分钟后沥干","不要长期泡在托盘里"] },
-  { name:"姬龟背竹", scientificName:"Monstera adansonii", cycle:14, trigger:"水培时水位低于根系，或水变浑浊", light:"明亮散射光", notes:["水培约 14 天换水","换水时冲洗容器和根系"] },
-  { name:"真柏盆景", scientificName:"Juniperus chinensis", cycle:2, trigger:"每 2 天检查，表层刚接近干、内部仍微润时浇透", light:"室外明亮通风并有日照", notes:["不适合长期放在封闭室内","细流浇透"] },
-  { name:"观音竹", scientificName:"Bambusa multiplex", cycle:3, seasonalCycle:{springSummer:3,autumnWinter:5}, trigger:"春夏每 3 天、秋冬每 5 天检查；表土约 2 厘米干燥时再浇", light:"明亮散射光至柔和日照", notes:["春夏按 3 天周期，秋冬按 5 天周期","高盆要确认底部能排水"] },
-  { name:"天堂鸟", scientificName:"Strelitzia reginae", cycle:10, trigger:"表土 3–5 厘米干燥", light:"明亮光照，可接受日照", notes:["浇透并倒掉托盘水"] },
+  { name:"多孔龟背竹", scientificName:"Monstera adansonii", cycle:14, trigger:"水培时水位低于根系，或水变浑浊", light:"明亮散射光", notes:["水培约 14 天换水","换水时冲洗容器和根系"] },
+  { name:"新西兰珍珠柏", scientificName:"Juniperus chinensis", cycle:2, trigger:"每 2 天检查，表层刚接近干、内部仍微润时浇透", light:"室外明亮通风并有日照", notes:["不适合长期放在封闭室内","细流浇透"] },
+  { name:"台湾内门竹", scientificName:"Bambusa multiplex", cycle:3, seasonalCycle:{springSummer:3,autumnWinter:5}, trigger:"春夏每 3 天、秋冬每 5 天检查；表土约 2 厘米干燥时再浇", light:"明亮散射光至柔和日照", notes:["春夏按 3 天周期，秋冬按 5 天周期","高盆要确认底部能排水"] },
+  { name:"鹤望兰", scientificName:"Strelitzia reginae", cycle:10, trigger:"表土 3–5 厘米干燥", light:"明亮光照，可接受日照", notes:["浇透并倒掉托盘水"] },
   { name:"发财树", scientificName:"Pachira aquatica", cycle:14, trigger:"上半盆土已干且花盆明显变轻", light:"明亮散射光", notes:["粗干最怕频繁少量浇水","浇透后彻底沥水"] }
 ];
 
-const sampleHistory = { "巴西木":"2026-08-01", "银龙海芋苔球":"2026-08-01", "姬龟背竹":"2026-08-01", "真柏盆景":"2026-08-01", "观音竹":"2026-08-01", "天堂鸟":"2026-08-01" };
-const sampleFirstDue = { "发财树":"2026-08-04" };
+const sampleHistory = { "巴西木":"2026-08-01", "银龙海芋苔球":"2026-08-01", "多孔龟背竹":"2026-08-01", "新西兰珍珠柏":"2026-08-01", "台湾内门竹":"2026-08-01", "鹤望兰":"2026-08-01" };
+const sampleFirstDue = { "发财树":"2026-08-04", "袖珍椰子":"2026-08-09", "新玉缀":"2026-08-09", "罗汉松":"2026-08-09", "文竹":"2026-08-09", "小叶黄杨":"2026-08-09", "富贵竹":"2026-08-09" };
 let plants = loadJSON(STORAGE_KEY, []);
 let settings = loadJSON(SETTINGS_KEY, { defaultTime:"09:00", imported:false, notified:{} });
 settings = { defaultTime:"09:00", imported:false, notified:{}, familyCode:"", familyVersion:0, ...settings };
@@ -64,12 +64,16 @@ function applyCarePlanCorrections(){
   let changed=false;
   const update=(plant,values)=>{ Object.entries(values).forEach(([key,value])=>{ if(JSON.stringify(plant[key])!==JSON.stringify(value)){plant[key]=value;changed=true;} }); };
   plants.forEach(plant=>{
+    const renamed={"天堂鸟":"鹤望兰","观音竹":"台湾内门竹","景天科多肉":"新玉缀","真柏盆景":"新西兰珍珠柏","姬龟背竹":"多孔龟背竹"};
+    if(renamed[plant.name]) update(plant,{name:renamed[plant.name]});
     const oldCycle=Number(plant.cycle);
     if(plant.name==="富贵竹") update(plant,{cycle:3,trigger:"每 3 天检查水位，水位不足时补至刚好覆盖根系",notes:["每 3 天检查并按需补水","每 2–4 周换水并清洗容器"]});
     if(plant.name==="巴西木") update(plant,{trigger:"检查碗碟水位，补水至没过根部约 3 厘米",notes:["放在碗碟中水养，水深以没过根部约 3 厘米为准","定期换水并清洗碗碟"]});
     if(plant.name==="银龙海芋苔球") update(plant,{cycle:3});
-    if(plant.name==="真柏盆景") update(plant,{cycle:2,trigger:"每 2 天检查，表层刚接近干、内部仍微润时浇透"});
-    if(plant.name==="观音竹") update(plant,{cycle:3,seasonalCycle:{springSummer:3,autumnWinter:5},trigger:"春夏每 3 天、秋冬每 5 天检查；表土约 2 厘米干燥时再浇",notes:["春夏按 3 天周期，秋冬按 5 天周期","高盆要确认底部能排水"]});
+    if(plant.name==="新西兰珍珠柏") update(plant,{cycle:2,trigger:"每 2 天检查，表层刚接近干、内部仍微润时浇透"});
+    if(plant.name==="台湾内门竹") update(plant,{cycle:3,seasonalCycle:{springSummer:3,autumnWinter:5},trigger:"春夏每 3 天、秋冬每 5 天检查；表土约 2 厘米干燥时再浇",notes:["春夏按 3 天周期，秋冬按 5 天周期","高盆要确认底部能排水"]});
+    const firstWateringPlants=["袖珍椰子","新玉缀","罗汉松","文竹","小叶黄杨","富贵竹"];
+    if(plant.source==="imported" && !plant.lastWatered && firstWateringPlants.includes(plant.name) && plant.firstWateringRevision!=="2026-08-09") update(plant,{nextDue:"2026-08-09",firstWateringRevision:"2026-08-09"});
     if(plant.lastWatered && oldCycle!==Number(plant.cycle)) plant.nextDue=addDays(plant.lastWatered,cycleFor(plant,plant.lastWatered));
   });
   return changed;
