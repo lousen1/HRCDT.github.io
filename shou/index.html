@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f3f2ec">
+  <meta name="description" content="璁板綍姣忔棩鏃╂櫄浣撻噸銆佸崱璺噷涓庤缁冭繘搴?>
+  <title>鐦?路 浣撻噸涓庤缁冭褰?/title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="logo">鐦?/div>
+      <div class="brand"><h1>鐦?/h1><p>姣忎竴澶╋紝閮芥洿闈犺繎鑷繁</p></div>
+      <label class="date-box"><span>鏃ユ湡</span><input id="date" type="date"></label>
+    </header>
+
+    <section id="record" class="page active">
+      <article class="hero">
+        <span class="eyebrow">鏈€杩戜綋閲?/span>
+        <div class="weight"><b id="latestWeight">--</b><small>kg</small></div>
+        <span id="change" class="change">寮€濮嬭褰?/span>
+        <div class="orbit"><i></i></div>
+      </article>
+
+      <form id="recordForm" class="card form-card">
+        <div class="card-head"><div><span class="eyebrow lime">TODAY</span><h2 id="recordTitle">浠婃棩璁板綍</h2></div><span id="recordStatus" class="status">寰呰褰?/span></div>
+        <div class="fields">
+          <label><span class="field-icon sun">鈼?/span><span class="field-copy"><b>鏃╂櫒浣撻噸</b><small>璧峰簥绌鸿吂鍚?/small></span><input id="morning" type="number" inputmode="decimal" min="20" max="300" step="0.1" placeholder="--"><em>kg</em></label>
+          <label><span class="field-icon moon">鈼?/span><span class="field-copy"><b>鏅氶棿浣撻噸</b><small>鐫″墠璁板綍</small></span><input id="evening" type="number" inputmode="decimal" min="20" max="300" step="0.1" placeholder="--"><em>kg</em></label>
+          <label><span class="field-icon fire">鈾?/span><span class="field-copy"><b>浠婃棩鎽勫叆</b><small>鎵嬪姩杈撳叆鎬荤儹閲?/small></span><input id="calories" type="number" inputmode="numeric" min="0" max="10000" step="1" placeholder="--"><em>kcal</em></label>
+        </div>
+        <button id="saveBtn" class="save" type="submit">淇濆瓨浠婃棩璁板綍</button>
+      </form>
+
+      <button id="goWorkout" class="mini-card"><span id="miniRing" class="ring"><b id="miniDone">0</b><small>/7</small></span><span><b>浠婃棩璁粌</b><small id="miniText">杩樻湁 7 椤癸紝涓€鐐圭偣鏉?/small></span><i>鈫?/i></button>
+    </section>
+
+    <section id="trend" class="page">
+      <div class="title"><span class="eyebrow lime">PROGRESS</span><h2>鍙樺寲瓒嬪娍</h2><p>鐪嬭姣忎竴娆″潥鎸佺暀涓嬬殑鐥曡抗</p></div>
+      <article class="card chart-card">
+        <div class="chart-head"><div><b>浣撻噸鏇茬嚎</b><small>杩?14 娆¤褰?/small></div><div class="legend"><i></i>鏃╂櫒<i></i>鏅氶棿</div></div>
+        <canvas id="chart"></canvas>
+        <div id="chartEmpty" class="empty">璁板綍浣撻噸鍚庯紝杩欓噷浼氬嚭鐜板彉鍖栨洸绾?/div>
+      </article>
+      <div class="stats"><div><span>寮€濮嬩綋閲?/span><b id="startWeight">--</b><small>kg</small></div><div><span>鏈€杩戝彉鍖?/span><b id="totalChange">--</b><small>kg</small></div><div><span>璁板綍澶╂暟</span><b id="recordDays">0</b><small>澶?/small></div></div>
+      <article class="card history"><h3>鏈€杩戣褰?/h3><div id="historyList"></div></article>
+    </section>
+
+    <section id="workout" class="page">
+      <div class="workout-head"><div><span class="eyebrow lime">WORKOUT</span><h2>浠婃棩璁粌</h2><p id="workoutDate"></p></div><div><b id="score">0</b><small>%</small></div></div>
+      <div class="progress"><i id="progressBar"></i></div>
+      <div id="workoutList" class="workouts"></div>
+      <p id="encouragement" class="encouragement">涓嶇敤涓€娆″畬鎴愭墍鏈夛紝淇濇寔鍛煎惛锛屾寜浣犵殑鑺傚鏉ャ€?/p>
+    </section>
+
+    <nav class="nav" aria-label="涓诲鑸?>
+      <button data-page="record" class="active"><span>鈻?/span><b>璁板綍</b></button>
+      <button data-page="trend"><span>鈱?/span><b>瓒嬪娍</b></button>
+      <button data-page="workout"><span>鈼?/span><b>璁粌</b></button>
+    </nav>
+  </main>
+  <script src="./app.js"></script>
+</body>
+</html>
+
