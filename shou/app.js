@@ -1,17 +1,17 @@
 const exercises=[
   {t:"热身",m:5,d:"跑步机快走 · 坡度 3 · 速度 4.5，微出汗即可",i:"↗"},
-  {t:"基础有氧",m:25,d:"爬坡 · 坡度 9 · 速度 4.5",i:"∿"},
-  {t:"慢跑",m:15,d:"坡度 1 · 速度 5",i:"▷"},
+  {t:"基础有氧",m:30,d:"爬坡 · 坡度 9 · 速度 4.5",i:"∿"},
+  {t:"慢跑",m:20,d:"坡度 1 · 速度 5",i:"▷"},
   {t:"走路",m:5,d:"坡度 1 · 速度 4",i:"→"},
-  {t:"基础力量",m:15,d:"靠墙静蹲 · 臀桥 · 肩胛滑动 · 平板支撑",i:"◇"},
+  {t:"基础力量",m:50,d:"靠墙静蹲 · 臀桥 · 肩胛滑动 · 平板支撑",i:"◇"},
   {t:"拉伸放松",m:10,d:"胸大肌 · 髋腰肌 · 下犬式 · 婴儿式",i:"⌒"},
   {t:"结束整理",m:2,d:"补水、洗澡、放松呼吸",i:"·"}
 ];
 const rewards=[
-  {id:"massage",icon:"💆",title:"老公按摩券",cost:200,note:"一次认真的全身放松服务"},
+  {id:"milktea",icon:"🧋",title:"一杯奶茶",cost:200,note:"兑换一杯自己喜欢的奶茶"},
   {id:"dinner",icon:"🍽️",title:"周末外食特权",cost:500,note:"安心享受一顿喜欢的饭"},
   {id:"cart",icon:"🛒",title:"购物车清空券",cost:800,note:"可选一件，价格不超过 300 元"},
-  {id:"peace",icon:"🫶",title:"和好优先卡",cost:1000,note:"当天由对方先拥抱、主动破冰"}
+  {id:"concert",icon:"🎫",title:"汪苏泷演唱会看台票",cost:1000,note:"一张价值 680 元的看台票"}
 ];
 const $=id=>document.getElementById(id);
 const iso=d=>{const x=d||new Date(),o=x.getTimezoneOffset();return new Date(x-o*60000).toISOString().slice(0,10)};
@@ -27,6 +27,7 @@ const today=iso(),thisMonday=monday(today),startedMonday=monday(today);
 const bankDefault={version:2,startedAt:today,firstFullWeek:today===startedMonday?startedMonday:addDays(startedMonday,7),ledger:[],water:{},partner:{},settlements:{},weightChecks:{},redemptions:[]};
 let bank=bankDefault;
 try{const old=JSON.parse(localStorage.getItem("shou-bank-v2")||"null");if(old)bank={...bankDefault,...old,ledger:old.ledger||[],water:old.water||{},partner:old.partner||{},settlements:old.settlements||{},weightChecks:old.weightChecks||{},redemptions:old.redemptions||[]}}catch(e){}
+bank.ledger.forEach(x=>{if(x.id?.startsWith('water:')&&x.label==="喝够 2 升水")x.label="喝够 1.5 升水"});
 
 $('date').value=today;
 const currentDate=()=>$('date').value;
@@ -92,7 +93,7 @@ $('recordForm').addEventListener('submit',e=>{
   earned+=processWeightCheck(data.date);saveAll();refreshRecord();refreshBank();$('saveBtn').textContent="✓ 已保存";toast(earned?`已入账 +${earned} 积分`:"今日记录已保存");setTimeout(()=>$('saveBtn').textContent="保存今日记录",1500);
 });
 $('date').addEventListener('change',()=>{refreshRecord();refreshTrend()});
-$('waterBtn').onclick=()=>{if(bank.water[currentDate()])return;bank.water[currentDate()]=true;addEntry(`water:${currentDate()}`,5,"喝够 2 升水","💧",currentDate(),"吨吨吨～");saveAll();waterSound();toast("吨吨吨～ +5 积分");refreshRecord();refreshBank()};
+$('waterBtn').onclick=()=>{if(bank.water[currentDate()])return;bank.water[currentDate()]=true;addEntry(`water:${currentDate()}`,5,"喝够 1.5 升水","💧",currentDate(),"吨吨吨～");saveAll();waterSound();toast("吨吨吨～ +5 积分");refreshRecord();refreshBank()};
 
 function refreshWorkout(){
   const done=completed[currentDate()]||exercises.map(()=>false),n=done.filter(Boolean).length,p=Math.round(n/exercises.length*100),minutes=done.reduce((sum,x,i)=>sum+(x?exercises[i].m:0),0);
