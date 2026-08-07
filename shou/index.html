@@ -6,13 +6,14 @@
   <meta name="theme-color" content="#f3f2ec">
   <meta name="description" content="记录每日早晚体重、卡路里与训练进度">
   <title>瘦 · 体重与训练记录</title>
-  <link rel="stylesheet" href="./style.css?v=2">
+  <link rel="stylesheet" href="./style.css?v=3">
 </head>
 <body>
   <main class="app">
     <header class="topbar">
       <div class="logo">瘦</div>
       <div class="brand"><h1>瘦</h1><p>每一天，都更靠近自己</p></div>
+      <button id="scorePill" class="score-pill" type="button"><span>🪙</span><b id="headerScore">0</b></button>
       <label class="date-box"><span>日期</span><input id="date" type="date"></label>
     </header>
 
@@ -34,6 +35,11 @@
         <button id="saveBtn" class="save" type="submit">保存今日记录</button>
       </form>
 
+      <article class="card daily-mission">
+        <div><span class="eyebrow lime">DAILY BONUS</span><h3>今日小任务</h3><p>喝够 2 升水，让身体也收个利息。</p></div>
+        <button id="waterBtn" type="button"><span>💧</span><b id="waterText">喝完了</b><em>+5</em></button>
+      </article>
+
       <button id="goWorkout" class="mini-card"><span id="miniRing" class="ring"><b id="miniDone">0</b><small>/7</small></span><span><b>今日训练</b><small id="miniText">还有 7 项，一点点来</small></span><i>→</i></button>
     </section>
 
@@ -51,16 +57,48 @@
     <section id="workout" class="page">
       <div class="workout-head"><div><span class="eyebrow lime">WORKOUT</span><h2>今日训练</h2><p id="workoutDate"></p></div><div><b id="score">0</b><small>%</small></div></div>
       <div class="progress"><i id="progressBar"></i></div>
+      <div class="workout-bank card">
+        <div><span>已完成</span><b><i id="workoutMinutes">0</i> 分钟</b><small>满 20 分钟自动入账 +30</small></div>
+        <button id="partnerBtn" type="button"><span>🤝</span><b id="partnerText">陪练 +1</b><em>+10</em></button>
+      </div>
       <div id="workoutList" class="workouts"></div>
       <p id="encouragement" class="encouragement">不用一次完成所有，保持呼吸，按你的节奏来。</p>
+    </section>
+
+    <section id="bank" class="page">
+      <article class="bank-hero">
+        <div><span class="eyebrow">你的专属运动银行</span><div class="bank-balance"><b id="bankBalance">0</b><small>积分</small></div><p>认真记录的每一天，都在这里生息。</p></div><span class="bank-coin">🪙</span>
+      </article>
+
+      <div class="rank-card card">
+        <div class="rank-top"><div><span class="eyebrow lime">WEEKLY RANK</span><h3 id="rankName">青铜段位</h3></div><span id="rankCount">0 / 3 次</span></div>
+        <div class="rank-track"><i id="rankBar"></i></div>
+        <p id="rankHint">本周再训练 2 次即可保级。</p>
+      </div>
+
+      <div class="bank-tabs"><button class="active" data-bank-tab="store">兑换商城</button><button data-bank-tab="ledger">积分明细</button><button data-bank-tab="rules">积分规则</button></div>
+
+      <div id="bankStore" class="bank-panel active"><div id="rewardList" class="reward-list"></div></div>
+      <div id="bankLedger" class="bank-panel"><article class="card ledger-card"><div id="ledgerList"></div></article></div>
+      <div id="bankRules" class="bank-panel">
+        <article class="card rule-card">
+          <h3>每日基础养老金</h3>
+          <div><span>早体重</span><b>+10</b></div><div><span>晚体重</span><b>+10</b></div><div><span>锻炼满 20 分钟</span><b>+30</b></div><div><span>喝够 2 升水</span><b>+5</b></div><div><span>7:00 前记早体重</span><b>+3</b></div><div><span>陪练 +1</span><b>+10</b></div>
+        </article>
+        <article class="card rule-card"><h3>每周段位结算</h3><div><span>锻炼少于 2 次</span><b class="minus">-80</b></div><div><span>锻炼正好 2 次</span><b>0</b></div><div><span>锻炼至少 3 次</span><b>+60</b></div><div><span>早晚体重全勤</span><b>+20</b></div></article>
+        <article class="card rule-card"><h3>体重降级暴击</h3><p>每个周一对比上周一早体重：每下降 0.1kg 得 5 分，每累计下降 0.5kg 再奖 30 分。反弹或持平不扣分。</p></article>
+      </div>
     </section>
 
     <nav class="nav" aria-label="主导航">
       <button data-page="record" class="active"><span>▣</span><b>记录</b></button>
       <button data-page="trend"><span>⌯</span><b>趋势</b></button>
       <button data-page="workout"><span>◇</span><b>训练</b></button>
+      <button data-page="bank"><span>🪙</span><b>积分</b></button>
     </nav>
   </main>
-  <script src="./app.js?v=2"></script>
+  <div id="toast" class="toast" role="status"></div>
+  <div id="voucherModal" class="modal" aria-hidden="true"><div class="voucher"><button id="closeVoucher" class="modal-close" type="button">×</button><span class="eyebrow lime">REDEEMED</span><h2 id="voucherTitle">兑换成功</h2><div class="voucher-stamp">瘦</div><img id="voucherQr" alt="兑换凭证二维码"><b id="voucherCode"></b><p id="voucherNote"></p><small>凭此码找老公兑换 · 使用一次有效</small></div></div>
+  <script src="./app.js?v=3"></script>
 </body>
 </html>
