@@ -21,12 +21,18 @@ const monday=s=>{const d=asDate(s),day=(d.getDay()+6)%7;d.setDate(d.getDate()-da
 const pretty=s=>{const d=asDate(s);return `${d.getMonth()+1}月${d.getDate()}日`};
 const inRange=(s,start,end)=>s>=start&&s<end;
 
-let records=[],completed={};
+let records=[],completed={},safetyBackup=null;
+try{safetyBackup=JSON.parse(localStorage.getItem("shou-safety-backup-v1")||"null")}catch(e){}
 try{records=JSON.parse(localStorage.getItem("shou-records")||"[]");completed=JSON.parse(localStorage.getItem("shou-workouts")||"{}") }catch(e){}
+if(!Array.isArray(records))records=[];
+if(!completed||typeof completed!=="object"||Array.isArray(completed))completed={};
+if(!records.length&&Array.isArray(safetyBackup?.records)&&safetyBackup.records.length)records=safetyBackup.records;
+if(!Object.keys(completed).length&&safetyBackup?.completed&&typeof safetyBackup.completed==="object"&&!Array.isArray(safetyBackup.completed))completed=safetyBackup.completed;
 const today=iso(),thisMonday=monday(today),startedMonday=monday(today);
 const bankDefault={version:2,startedAt:today,firstFullWeek:today===startedMonday?startedMonday:addDays(startedMonday,7),ledger:[],water:{},partner:{},settlements:{},weightChecks:{},redemptions:[]};
 let bank=bankDefault;
 try{const old=JSON.parse(localStorage.getItem("shou-bank-v2")||"null");if(old)bank={...bankDefault,...old,ledger:old.ledger||[],water:old.water||{},partner:old.partner||{},settlements:old.settlements||{},weightChecks:old.weightChecks||{},redemptions:old.redemptions||[]}}catch(e){}
+if(!bank.ledger.length&&Array.isArray(safetyBackup?.bank?.ledger)&&safetyBackup.bank.ledger.length){const old=safetyBackup.bank;bank={...bankDefault,...old,ledger:old.ledger||[],water:old.water||{},partner:old.partner||{},settlements:old.settlements||{},weightChecks:old.weightChecks||{},redemptions:old.redemptions||[]}}
 bank.ledger.forEach(x=>{if(x.id?.startsWith('water:')&&x.label==="喝够 2 升水")x.label="喝够 1.5 升水"});
 
 $('date').value=today;
@@ -34,7 +40,7 @@ const currentDate=()=>$('date').value;
 const currentRecord=()=>records.find(r=>r.date===currentDate())||{date:currentDate(),morning:"",evening:"",calories:""};
 const hasEntry=id=>bank.ledger.some(x=>x.id===id);
 const balance=()=>bank.ledger.reduce((sum,x)=>sum+Number(x.points||0),0);
-const saveAll=()=>{localStorage.setItem("shou-records",JSON.stringify(records));localStorage.setItem("shou-workouts",JSON.stringify(completed));localStorage.setItem("shou-bank-v2",JSON.stringify(bank))};
+const saveAll=()=>{const snapshot={version:1,savedAt:new Date().toISOString(),records,completed,bank};localStorage.setItem("shou-safety-backup-v1",JSON.stringify(snapshot));localStorage.setItem("shou-records",JSON.stringify(records));localStorage.setItem("shou-workouts",JSON.stringify(completed));localStorage.setItem("shou-bank-v2",JSON.stringify(bank))};
 const addEntry=(id,points,label,icon,date,detail="")=>{if(hasEntry(id))return false;bank.ledger.push({id,points,label,icon,date:date||today,detail,createdAt:new Date().toISOString()});return true};
 
 let toastTimer;
@@ -139,5 +145,10 @@ document.querySelectorAll('[data-bank-tab]').forEach(b=>b.onclick=()=>{document.
 
 function showPage(id){document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===id));if(id==='trend')refreshTrend();if(id==='bank')refreshBank()}
 document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));$('goWorkout').onclick=()=>showPage('workout');$('scorePill').onclick=()=>showPage('bank');window.addEventListener('resize',()=>{if($('trend').classList.contains('active'))refreshTrend()});
+
+$('exportBackup').onclick=()=>{const payload={version:1,exportedAt:new Date().toISOString(),records,completed,bank};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=`shou-backup-${today}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('备份已导出，请保存到“文件”')};
+$('importBackup').onchange=event=>{const file=event.target.files?.[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const payload=JSON.parse(String(reader.result||'')),validRecords=Array.isArray(payload.records),validCompleted=payload.completed&&typeof payload.completed==='object'&&!Array.isArray(payload.completed),validBank=payload.bank&&Array.isArray(payload.bank.ledger);if(!validRecords||!validCompleted||!validBank)throw new Error('invalid backup');if(!confirm('恢复备份会用文件中的记录和积分替换当前数据，确认继续吗？'))return;records=payload.records;completed=payload.completed;const old=payload.bank;bank={...bankDefault,...old,ledger:old.ledger||[],water:old.water||{},partner:old.partner||{},settlements:old.settlements||{},weightChecks:old.weightChecks||{},redemptions:old.redemptions||[]};saveAll();alert('恢复成功，页面将重新打开。');location.reload()}catch(e){toast('备份文件无法识别')}finally{event.target.value=''}};reader.readAsText(file,'utf-8')};
+
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=1').catch(()=>{}));
 
 bootstrapToday();settleWeeks();processWeightCheck(today);saveAll();refreshRecord();refreshTrend();refreshBank();
