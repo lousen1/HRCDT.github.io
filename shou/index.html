@@ -6,7 +6,9 @@
   <meta name="theme-color" content="#f3f2ec">
   <meta name="description" content="记录每日早晚体重、卡路里与训练进度">
   <title>瘦 · 体重与训练记录</title>
-  <link rel="stylesheet" href="./style.css?v=3">
+  <link rel="manifest" href="./manifest.webmanifest?v=1">
+  <link rel="stylesheet" href="./style.css?v=4">
+  <link rel="stylesheet" href="./safety.css?v=1">
 </head>
 <body>
   <main class="app">
@@ -70,6 +72,11 @@
         <div><span class="eyebrow">你的专属运动银行</span><div class="bank-balance"><b id="bankBalance">0</b><small>积分</small></div><p>认真记录的每一天，都在这里生息。</p></div><span class="bank-coin">🪙</span>
       </article>
 
+      <article class="card data-safety">
+        <div><span class="eyebrow lime">DATA SAFE</span><h3>数据安全箱</h3><p>积分已自动保存双份副本。也可导出文件，用于换手机或意外恢复。</p></div>
+        <div class="safety-actions"><button id="exportBackup" type="button">导出备份</button><label for="importBackup">恢复备份<input id="importBackup" type="file" accept="application/json,.json"></label></div>
+      </article>
+
       <div class="rank-card card">
         <div class="rank-top"><div><span class="eyebrow lime">WEEKLY RANK</span><h3 id="rankName">青铜段位</h3></div><span id="rankCount">0 / 3 次</span></div>
         <div class="rank-track"><i id="rankBar"></i></div>
@@ -99,6 +106,6 @@
   </main>
   <div id="toast" class="toast" role="status"></div>
   <div id="voucherModal" class="modal" aria-hidden="true"><div class="voucher"><button id="closeVoucher" class="modal-close" type="button">×</button><span class="eyebrow lime">REDEEMED</span><h2 id="voucherTitle">兑换成功</h2><div class="voucher-stamp">瘦</div><img id="voucherQr" alt="兑换凭证二维码"><b id="voucherCode"></b><p id="voucherNote"></p><small>凭此码找老公兑换 · 使用一次有效</small></div></div>
-  <script src="./app.js?v=4"></script>
+  <script src="./app.js?v=5"></script>
 </body>
 </html>
