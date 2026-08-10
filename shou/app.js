@@ -51,9 +51,9 @@ function processWeightCheck(date){
   if(monday(date)!==date||bank.weightChecks[date])return 0;
   const now=records.find(r=>r.date===date),prevDate=addDays(date,-7),prev=records.find(r=>r.date===prevDate);
   if(!now?.morning||!prev?.morning)return 0;
-  const drop=Math.max(0,Number(prev.morning)-Number(now.morning)),tenths=Math.floor(drop*10+1e-6),halves=Math.floor(drop/0.5+1e-6),points=tenths*5+halves*30;
+  const drop=Math.max(0,Number(prev.morning)-Number(now.morning)),fifths=Math.floor(drop/0.2+1e-6),wholeJin=Math.floor(drop+1e-6),points=fifths*5+wholeJin*30;
   bank.weightChecks[date]={previous:Number(prev.morning),current:Number(now.morning),drop:Number(drop.toFixed(2)),points};
-  if(points>0)addEntry(`loss:${date}`,points,`体重下降 ${drop.toFixed(1)}kg`,"↘",date,`比 ${pretty(prevDate)} 轻了`);
+  if(points>0)addEntry(`loss:${date}`,points,`体重下降 ${drop.toFixed(1)}斤`,"↘",date,`比 ${pretty(prevDate)} 轻了`);
   return points;
 }
 
@@ -87,7 +87,7 @@ function refreshRecord(){
   const r=currentRecord();$('morning').value=r.morning;$('evening').value=r.evening;$('calories').value=r.calories;
   $('recordTitle').textContent=currentDate()===today?"今日记录":pretty(currentDate());$('recordStatus').textContent=r.morning||r.evening||r.calories?"已填写":"待记录";
   const sorted=records.filter(x=>x.morning||x.evening).sort((a,b)=>a.date.localeCompare(b.date)),latest=sorted.at(-1),first=sorted[0],lw=latest&&(latest.evening||latest.morning),fw=first&&(first.morning||first.evening);
-  $('latestWeight').textContent=lw||"--";const c=lw&&fw?Number(lw)-Number(fw):0;$('change').textContent=sorted.length>1?`${c>0?"+":""}${c.toFixed(1)} kg`:"开始记录";
+  $('latestWeight').textContent=lw||"--";const c=lw&&fw?Number(lw)-Number(fw):0;$('change').textContent=sorted.length>1?`${c>0?"+":""}${c.toFixed(1)} 斤`:"开始记录";
   const watered=!!bank.water[currentDate()];$('waterBtn').classList.toggle('done',watered);$('waterText').textContent=watered?"已喝完":"喝完了";$('waterBtn').disabled=watered;
   refreshWorkout();refreshHeader();
 }
@@ -126,7 +126,7 @@ function refreshTrend(){
   $('chart').style.display=points.length?'block':'none';$('chartEmpty').style.display=points.length?'none':'grid';if(points.length)requestAnimationFrame(()=>drawChart(points));
   const first=sorted[0],last=sorted.at(-1),fw=first&&(first.morning||first.evening),lw=last&&(last.evening||last.morning),ch=fw&&lw?Number(lw)-Number(fw):null;
   $('startWeight').textContent=fw||'--';$('totalChange').textContent=ch===null?'--':`${ch>0?'+':''}${ch.toFixed(1)}`;$('recordDays').textContent=sorted.length;
-  const rows=[...records].filter(r=>r.morning||r.evening||r.calories).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7);$('historyList').innerHTML=rows.length?rows.map(r=>`<div class="history-row"><span>${pretty(r.date)}</span><b>${r.morning||'--'} / ${r.evening||'--'} kg</b><em>${r.calories||'--'} kcal</em></div>`).join(''):'<p class="history-empty">还没有记录，从今天开始吧。</p>';
+  const rows=[...records].filter(r=>r.morning||r.evening||r.calories).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7);$('historyList').innerHTML=rows.length?rows.map(r=>`<div class="history-row"><span>${pretty(r.date)}</span><b>${r.morning||'--'} / ${r.evening||'--'} 斤</b><em>${r.calories||'--'} kcal</em></div>`).join(''):'<p class="history-empty">还没有记录，从今天开始吧。</p>';
 }
 
 function weekWorkoutCount(){const start=monday(today),end=addDays(start,7);return bank.ledger.filter(x=>x.id.startsWith('workout:')&&inRange(x.date,start,end)).length}
@@ -149,6 +149,6 @@ document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>showPage(b.dat
 $('exportBackup').onclick=()=>{const payload={version:1,exportedAt:new Date().toISOString(),records,completed,bank};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=`shou-backup-${today}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('备份已导出，请保存到“文件”')};
 $('importBackup').onchange=event=>{const file=event.target.files?.[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const payload=JSON.parse(String(reader.result||'')),validRecords=Array.isArray(payload.records),validCompleted=payload.completed&&typeof payload.completed==='object'&&!Array.isArray(payload.completed),validBank=payload.bank&&Array.isArray(payload.bank.ledger);if(!validRecords||!validCompleted||!validBank)throw new Error('invalid backup');if(!confirm('恢复备份会用文件中的记录和积分替换当前数据，确认继续吗？'))return;records=payload.records;completed=payload.completed;const old=payload.bank;bank={...bankDefault,...old,ledger:old.ledger||[],water:old.water||{},partner:old.partner||{},settlements:old.settlements||{},weightChecks:old.weightChecks||{},redemptions:old.redemptions||[]};saveAll();alert('恢复成功，页面将重新打开。');location.reload()}catch(e){toast('备份文件无法识别')}finally{event.target.value=''}};reader.readAsText(file,'utf-8')};
 
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=1').catch(()=>{}));
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=2').catch(()=>{}));
 
 bootstrapToday();settleWeeks();processWeightCheck(today);saveAll();refreshRecord();refreshTrend();refreshBank();
