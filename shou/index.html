@@ -22,7 +22,7 @@
     <section id="record" class="page active">
       <article class="hero">
         <span class="eyebrow">最近体重</span>
-        <div class="weight"><b id="latestWeight">--</b><small>kg</small></div>
+        <div class="weight"><b id="latestWeight">--</b><small>斤</small></div>
         <span id="change" class="change">开始记录</span>
         <div class="orbit"><i></i></div>
       </article>
@@ -30,8 +30,8 @@
       <form id="recordForm" class="card form-card">
         <div class="card-head"><div><span class="eyebrow lime">TODAY</span><h2 id="recordTitle">今日记录</h2></div><span id="recordStatus" class="status">待记录</span></div>
         <div class="fields">
-          <label><span class="field-icon sun">◔</span><span class="field-copy"><b>早晨体重</b><small>起床空腹后</small></span><input id="morning" type="number" inputmode="decimal" min="20" max="300" step="0.1" placeholder="--"><em>kg</em></label>
-          <label><span class="field-icon moon">◑</span><span class="field-copy"><b>晚间体重</b><small>睡前记录</small></span><input id="evening" type="number" inputmode="decimal" min="20" max="300" step="0.1" placeholder="--"><em>kg</em></label>
+          <label><span class="field-icon sun">◔</span><span class="field-copy"><b>早晨体重</b><small>起床空腹后</small></span><input id="morning" type="number" inputmode="decimal" min="40" max="600" step="0.1" placeholder="--"><em>斤</em></label>
+          <label><span class="field-icon moon">◑</span><span class="field-copy"><b>晚间体重</b><small>睡前记录</small></span><input id="evening" type="number" inputmode="decimal" min="40" max="600" step="0.1" placeholder="--"><em>斤</em></label>
           <label><span class="field-icon fire">♨</span><span class="field-copy"><b>今日消耗</b><small>手动输入消耗热量</small></span><input id="calories" type="number" inputmode="numeric" min="0" max="10000" step="1" placeholder="--"><em>kcal</em></label>
         </div>
         <button id="saveBtn" class="save" type="submit">保存今日记录</button>
@@ -52,7 +52,7 @@
         <canvas id="chart"></canvas>
         <div id="chartEmpty" class="empty">记录体重后，这里会出现变化曲线</div>
       </article>
-      <div class="stats"><div><span>开始体重</span><b id="startWeight">--</b><small>kg</small></div><div><span>最近变化</span><b id="totalChange">--</b><small>kg</small></div><div><span>记录天数</span><b id="recordDays">0</b><small>天</small></div></div>
+      <div class="stats"><div><span>开始体重</span><b id="startWeight">--</b><small>斤</small></div><div><span>最近变化</span><b id="totalChange">--</b><small>斤</small></div><div><span>记录天数</span><b id="recordDays">0</b><small>天</small></div></div>
       <article class="card history"><h3>最近记录</h3><div id="historyList"></div></article>
     </section>
 
@@ -93,7 +93,7 @@
           <div><span>早体重</span><b>+10</b></div><div><span>晚体重</span><b>+10</b></div><div><span>锻炼满 20 分钟</span><b>+30</b></div><div><span>喝够 1.5 升水</span><b>+5</b></div><div><span>7:00 前记早体重</span><b>+3</b></div><div><span>陪练 +1</span><b>+10</b></div>
         </article>
         <article class="card rule-card"><h3>每周段位结算</h3><div><span>锻炼少于 2 次</span><b class="minus">-80</b></div><div><span>锻炼正好 2 次</span><b>0</b></div><div><span>锻炼至少 3 次</span><b>+60</b></div><div><span>早晚体重全勤</span><b>+20</b></div></article>
-        <article class="card rule-card"><h3>体重降级暴击</h3><p>每个周一对比上周一早体重：每下降 0.1kg 得 5 分，每累计下降 0.5kg 再奖 30 分。反弹或持平不扣分。</p></article>
+        <article class="card rule-card"><h3>体重降级暴击</h3><p>每个周一对比上周一早体重：每下降 0.2 斤得 5 分，每累计下降 1 斤再奖 30 分。反弹或持平不扣分。</p></article>
       </div>
     </section>
 
@@ -106,6 +106,6 @@
   </main>
   <div id="toast" class="toast" role="status"></div>
   <div id="voucherModal" class="modal" aria-hidden="true"><div class="voucher"><button id="closeVoucher" class="modal-close" type="button">×</button><span class="eyebrow lime">REDEEMED</span><h2 id="voucherTitle">兑换成功</h2><div class="voucher-stamp">瘦</div><img id="voucherQr" alt="兑换凭证二维码"><b id="voucherCode"></b><p id="voucherNote"></p><small>凭此码找老公兑换 · 使用一次有效</small></div></div>
-  <script src="./app.js?v=5"></script>
+  <script src="./app.js?v=6"></script>
 </body>
 </html>
