@@ -8,7 +8,7 @@
   <title>瘦 · 体重与训练记录</title>
   <link rel="manifest" href="./manifest.webmanifest?v=1">
   <link rel="stylesheet" href="./style.css?v=4">
-  <link rel="stylesheet" href="./safety.css?v=1">
+  <link rel="stylesheet" href="./safety.css?v=2">
 </head>
 <body>
   <main class="app">
@@ -36,6 +36,11 @@
         </div>
         <button id="saveBtn" class="save" type="submit">保存今日记录</button>
       </form>
+
+      <article class="card makeup-card">
+        <div><span class="eyebrow lime">MAKE-UP</span><h3 id="makeupTitle">本月补卡</h3><p id="makeupHint">选择漏记的日期后填写体重；同一天补早、晚体重只使用 1 次。</p></div>
+        <div class="makeup-count"><b id="makeupLeft">3</b><span>/ 3</span><small>剩余次数</small></div>
+      </article>
 
       <article class="card daily-mission">
         <div><span class="eyebrow lime">DAILY BONUS</span><h3>今日小任务</h3><p>喝够 1.5 升水，让身体也收个利息。</p></div>
@@ -106,6 +111,6 @@
   </main>
   <div id="toast" class="toast" role="status"></div>
   <div id="voucherModal" class="modal" aria-hidden="true"><div class="voucher"><button id="closeVoucher" class="modal-close" type="button">×</button><span class="eyebrow lime">REDEEMED</span><h2 id="voucherTitle">兑换成功</h2><div class="voucher-stamp">瘦</div><img id="voucherQr" alt="兑换凭证二维码"><b id="voucherCode"></b><p id="voucherNote"></p><small>凭此码找老公兑换 · 使用一次有效</small></div></div>
-  <script src="./app.js?v=6"></script>
+  <script src="./app.js?v=7"></script>
 </body>
 </html>
