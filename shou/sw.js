@@ -1,5 +1,5 @@
-const CACHE="shou-offline-v2";
-const CORE=["./","./index.html","./style.css?v=4","./safety.css?v=1","./app.js?v=6","./manifest.webmanifest?v=1"];
+const CACHE="shou-offline-v3";
+const CORE=["./","./index.html","./style.css?v=4","./safety.css?v=2","./app.js?v=7","./manifest.webmanifest?v=1"];
 const INDEX=new URL("./index.html",self.location.href).href;
 
 self.addEventListener("install",event=>{
